@@ -30,11 +30,11 @@
             b_gyr_cov: 0.0001
             fov_degree:    360.0
             det_range:     100.0
-            extrinsic_est_en:  true      # true: enable the online estimation of IMU-LiDAR extrinsic
-            extrinsic_T: [ -0.011, -0.02329, 0.04412 ]
-            extrinsic_R: [ 1., 0., 0.,
-                            0., 1., 0.,
-                            0., 0., 1.]
+            extrinsic_est_en:  false      # true: enable the online estimation of IMU-LiDAR extrinsic
+            extrinsic_T: [ -0.026667, -0.003338, 0.040360 ]
+            extrinsic_R: [0.999972,  0.006639,  0.003357,
+                        -0.006592,  0.999883, -0.013810,
+                        -0.003448,  0.013788,  0.999899]
 
         publish:
             path_en: true                # true: publish Path

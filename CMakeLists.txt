@@ -1,38 +1,41 @@
 cmake_minimum_required(VERSION 3.8)
 project(fast_lio)
 
+# Set default build type to Release
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
 
-ADD_COMPILE_OPTIONS(-std=c++14)
-ADD_COMPILE_OPTIONS(-std=c++14)
-set(CMAKE_CXX_FLAGS "-std=c++14 -O3")
+# Define ROOT_DIR before using it
+add_compile_definitions(ROOT_DIR="${CMAKE_CURRENT_SOURCE_DIR}/")
 
-add_definitions(-DROOT_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/\")
-
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fexceptions")
-set(CMAKE_CXX_STANDARD 14)
+# Ensure C++17 is used
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -pthread -std=c++0x -std=c++14 -fexceptions")
+
+# Compiler flags
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -pthread -fexceptions")
+
+# Ensure position-independent code
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-message("Current CPU archtecture: ${CMAKE_SYSTEM_PROCESSOR}")
+# Print architecture info
+# message("Current CPU architecture: ${CMAKE_SYSTEM_PROCESSOR}")
 
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)")
   include(ProcessorCount)
   ProcessorCount(N)
-  message("Processer number:  ${N}")
+  # message("Processer number:  ${N}")
 
   if(N GREATER 4)
     add_definitions(-DMP_EN)
     add_definitions(-DMP_PROC_NUM=3)
-    message("core for MP: 3")
+    # message("core for MP: 3")
   elseif(N GREATER 3)
     add_definitions(-DMP_EN)
     add_definitions(-DMP_PROC_NUM=2)
-    message("core for MP: 2")
+    # message("core for MP: 2")
   else()
     add_definitions(-DMP_PROC_NUM=1)
   endif()
@@ -44,8 +47,17 @@ find_package(OpenMP QUIET)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}   ${OpenMP_C_FLAGS}")
 
-find_package(PythonLibs REQUIRED)
-find_path(MATPLOTLIB_CPP_INCLUDE_DIRS "matplotlibcpp.h")
+# Find Python 3
+find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
+
+# Set CMake policies to suppress warnings
+cmake_policy(SET CMP0148 NEW)  # Handle removed Python modules
+cmake_policy(SET CMP0144 NEW)  # Handle upper-case package root variables
+cmake_policy(SET CMP0074 NEW)  # Handle <PackageName>_ROOT variables
+
+if(DEFINED FLANN_ROOT)
+  set(FLANN_ROOT ${FLANN_ROOT} CACHE PATH "Path to FLANN" FORCE)
+endif()
 
 # ROS dependencies
 find_package(ament_cmake REQUIRED)
@@ -80,8 +92,8 @@ set(dependencies
 find_package(Eigen3 REQUIRED)
 find_package(PCL REQUIRED COMPONENTS common io)
 
-message(Eigen: ${EIGEN3_INCLUDE_DIR})
-message(STATUS "PCL: ${PCL_INCLUDE_DIRS}")
+# message(Eigen: ${EIGEN3_INCLUDE_DIR})
+# message(STATUS "PCL: ${PCL_INCLUDE_DIRS}")
 
 set(msg_files
   "msg/Pose6D.msg"
@@ -97,9 +109,9 @@ target_include_directories(fastlio_mapping PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
   ${PCL_INCLUDE_DIRS}
+  ${Python3_INCLUDE_DIRS}  # Include Python3 headers
 )
-target_link_libraries(fastlio_mapping ${PCL_LIBRARIES} ${PYTHON_LIBRARIES} Eigen3::Eigen)
-target_include_directories(fastlio_mapping PRIVATE ${PYTHON_INCLUDE_DIRS})
+target_link_libraries(fastlio_mapping ${PCL_LIBRARIES} ${Python3_LIBRARIES} Eigen3::Eigen)
 
 list(APPEND EOL_LIST "foxy" "galactic" "eloquent" "dashing" "crystal")
 
