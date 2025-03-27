@@ -104,6 +104,8 @@ vector<BoxPointType> cub_needrm;
 vector<PointVector>  Nearest_Points; 
 vector<double>       extrinT(3, 0.0);
 vector<double>       extrinR(9, 0.0);
+vector<double>       baselinkT(3, 0.0);
+vector<double>       baselinkR(9, 0.0);
 deque<double>                     time_buffer;
 deque<PointCloudXYZI::Ptr>        lidar_buffer;
 deque<sensor_msgs::msg::Imu::ConstSharedPtr> imu_buffer;
@@ -128,6 +130,8 @@ V3D euler_cur;
 V3D position_last(Zero3d);
 V3D Lidar_T_wrt_IMU(Zero3d);
 M3D Lidar_R_wrt_IMU(Eye3d);
+V3D Baselink_T_wrt_Lidar(Zero3d);
+M3D Baselink_R_wrt_Lidar(Eye3d);
 
 /*** EKF inputs and output ***/
 MeasureGroup Measures;
@@ -833,6 +837,8 @@ public:
         this->declare_parameter<int>("pcd_save.interval", -1);
         this->declare_parameter<vector<double>>("mapping.extrinsic_T", vector<double>());
         this->declare_parameter<vector<double>>("mapping.extrinsic_R", vector<double>());
+        this->declare_parameter<vector<double>>("mapping.baselink_T", vector<double>());
+        this->declare_parameter<vector<double>>("mapping.baselink_R", vector<double>());
 
         this->get_parameter_or<bool>("publish.path_en", path_en, true);
         this->get_parameter_or<bool>("publish.effect_map_en", effect_pub_en, false);
@@ -869,6 +875,8 @@ public:
         this->get_parameter_or<int>("pcd_save.interval", pcd_save_interval, -1);
         this->get_parameter_or<vector<double>>("mapping.extrinsic_T", extrinT, vector<double>());
         this->get_parameter_or<vector<double>>("mapping.extrinsic_R", extrinR, vector<double>());
+        this->get_parameter_or<vector<double>>("mapping.baselink_T", baselinkT, vector<double>());
+        this->get_parameter_or<vector<double>>("mapping.baselink_R", baselinkR, vector<double>());
 
         RCLCPP_INFO(this->get_logger(), "p_pre->lidar_type %d", p_pre->lidar_type);
 
@@ -894,7 +902,9 @@ public:
 
         Lidar_T_wrt_IMU<<VEC_FROM_ARRAY(extrinT);
         Lidar_R_wrt_IMU<<MAT_FROM_ARRAY(extrinR);
-        p_imu->set_extrinsic(Lidar_T_wrt_IMU, Lidar_R_wrt_IMU);
+        Baselink_T_wrt_Lidar<<VEC_FROM_ARRAY(baselinkT);
+        Baselink_R_wrt_Lidar<<MAT_FROM_ARRAY(baselinkR);
+        p_imu->set_extrinsic(Baselink_R_wrt_Lidar * Lidar_T_wrt_IMU + Baselink_T_wrt_Lidar, Lidar_R_wrt_IMU * Baselink_R_wrt_Lidar);
         p_imu->set_gyr_cov(V3D(gyr_cov, gyr_cov, gyr_cov));
         p_imu->set_acc_cov(V3D(acc_cov, acc_cov, acc_cov));
         p_imu->set_gyr_bias_cov(V3D(b_gyr_cov, b_gyr_cov, b_gyr_cov));
