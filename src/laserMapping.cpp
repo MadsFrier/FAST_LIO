@@ -905,8 +905,8 @@ public:
         Baselink_T_wrt_Lidar<<VEC_FROM_ARRAY(baselinkT);
         Baselink_R_wrt_Lidar<<MAT_FROM_ARRAY(baselinkR);
 
-        p_imu->set_extrinsic(Lidar_T_wrt_IMU, Lidar_R_wrt_IMU);
-        // p_imu->set_extrinsic(Baselink_R_wrt_Lidar * Lidar_T_wrt_IMU + Baselink_T_wrt_Lidar, Lidar_R_wrt_IMU * Baselink_R_wrt_Lidar);
+        // p_imu->set_extrinsic(Lidar_T_wrt_IMU, Lidar_R_wrt_IMU);
+        p_imu->set_extrinsic(Baselink_R_wrt_Lidar * Lidar_T_wrt_IMU + Baselink_T_wrt_Lidar, Lidar_R_wrt_IMU * Baselink_R_wrt_Lidar);
         p_imu->set_gyr_cov(V3D(gyr_cov, gyr_cov, gyr_cov));
         p_imu->set_acc_cov(V3D(acc_cov, acc_cov, acc_cov));
         p_imu->set_gyr_bias_cov(V3D(b_gyr_cov, b_gyr_cov, b_gyr_cov));
